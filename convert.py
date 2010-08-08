@@ -3,17 +3,17 @@ from BeautifulSoup import BeautifulStoneSoup
 import os
 import sys
 
-file = os.listdir('testlogs')[0]
-file = os.path.join('testlogs',file)
-soup = BeautifulStoneSoup(open(file).read())
-
-sys.stderr = open('/dev/null','w')
-
 class Log(object):
 	def __init__(self,file):
 		self.log = BeautifulStoneSoup(open(file).read())
-	def __iter__(self):
-		return self.log.chat.findAll(['event','message'])
+	def convert(self):
+		for ele in self.log.chat.findAll(['event','message']):
+			if ele.name=='event':
+				ele = Event(ele)
+				print ele.sender,ele.type
+			elif ele.name=='message':
+				ele = Message(ele)
+				print ele.alias,':',ele.text
 
 class Event(object):
 	def __init__(self,ele):
@@ -31,11 +31,15 @@ class Message(object):
 		self.alias = ele['alias']
 		self.text = BeautifulStoneSoup(ele.find(text=True),convertEntities=BeautifulStoneSoup.XML_ENTITIES)
 
-for ele in soup.chat.findAll(['event','message']):
-	if ele.name=='event':
-		ele = Event(ele)
-		print ele.sender,ele.type
-	elif ele.name=='message':
-		ele = Message(ele)
-		print ele.alias,':',ele.text
-
+if __name__ == '__main__':
+	if len(sys.argv) == 2:
+		file = sys.argv[1]
+	else: # Get Testing Log
+		file = os.listdir('testlogs')[0]
+		file = os.path.join('testlogs',file)
+	
+	# Redirect debugging
+	sys.stderr = open('/dev/null','w')
+	
+	log = Log(file)
+	log.convert()
